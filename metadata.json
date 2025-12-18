@@ -1,0 +1,5 @@
+{
+  "name": "SmartMortgage Calculator",
+  "description": "An advanced mortgage amortization and savings calculator that visualizes the long-term benefits of extra principal payments using real-time charts and AI-driven financial insights.",
+  "requestFramePermissions": []
+}

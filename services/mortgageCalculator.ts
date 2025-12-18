@@ -1,0 +1,73 @@
+
+import { MortgageInputs, MortgageResults, AmortizationPoint } from '../types';
+
+export const calculateMortgage = (inputs: MortgageInputs): MortgageResults => {
+  const { balance, interestRate, loanTerm, extraPayment } = inputs;
+  const monthlyRate = interestRate / 100 / 12;
+  const totalMonths = loanTerm * 12;
+
+  // Monthly Payment Formula: P * [r(1+r)^n] / [(1+r)^n - 1]
+  const standardMonthlyPayment = balance * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+
+  const amortization: AmortizationPoint[] = [];
+  let currentBalanceStd = balance;
+  let currentBalanceAcc = balance;
+  let totalInterestStd = 0;
+  let totalInterestAcc = 0;
+  let monthsSaved = 0;
+  let accFinished = false;
+
+  for (let m = 1; m <= totalMonths; m++) {
+    // Standard Scenario
+    const interestStd = currentBalanceStd * monthlyRate;
+    const principalStd = Math.min(standardMonthlyPayment - interestStd, currentBalanceStd);
+    totalInterestStd += interestStd;
+    currentBalanceStd -= principalStd;
+
+    // Accelerated Scenario
+    let interestAcc = 0;
+    if (!accFinished) {
+      interestAcc = currentBalanceAcc * monthlyRate;
+      const totalAvailableForPrincipal = (standardMonthlyPayment - interestAcc) + extraPayment;
+      const principalAcc = Math.min(totalAvailableForPrincipal, currentBalanceAcc);
+      totalInterestAcc += interestAcc;
+      currentBalanceAcc -= principalAcc;
+      
+      if (currentBalanceAcc <= 0) {
+        accFinished = true;
+        monthsSaved = totalMonths - m;
+      }
+    }
+
+    // Capture data points for chart (sample every 12 months for better performance)
+    if (m === 1 || m % 12 === 0 || m === totalMonths) {
+      amortization.push({
+        month: m,
+        year: Math.ceil(m / 12),
+        standardBalance: Math.max(0, currentBalanceStd),
+        acceleratedBalance: Math.max(0, currentBalanceAcc),
+        standardInterestPaid: totalInterestStd,
+        acceleratedInterestPaid: totalInterestAcc
+      });
+    }
+  }
+
+  return {
+    amortization,
+    totalInterestStandard: totalInterestStd,
+    totalInterestAccelerated: totalInterestAcc,
+    totalSavings: totalInterestStd - totalInterestAcc,
+    monthsSaved,
+    standardMonthlyPayment,
+    yearsToPayoff: (totalMonths - monthsSaved) / 12
+  };
+};
+
+export const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
