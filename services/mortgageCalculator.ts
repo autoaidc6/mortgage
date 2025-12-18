@@ -2,7 +2,7 @@
 import { MortgageInputs, MortgageResults, AmortizationPoint } from '../types';
 
 export const calculateMortgage = (inputs: MortgageInputs): MortgageResults => {
-  const { balance, interestRate, loanTerm, extraPayment } = inputs;
+  const { balance, interestRate, loanTerm, oneTimePayment } = inputs;
   const monthlyRate = interestRate / 100 / 12;
   const totalMonths = loanTerm * 12;
 
@@ -28,7 +28,11 @@ export const calculateMortgage = (inputs: MortgageInputs): MortgageResults => {
     let interestAcc = 0;
     if (!accFinished) {
       interestAcc = currentBalanceAcc * monthlyRate;
-      const totalAvailableForPrincipal = (standardMonthlyPayment - interestAcc) + extraPayment;
+      
+      // Apply the one-time payment ONLY in the first month
+      const extraThisMonth = m === 1 ? oneTimePayment : 0;
+      
+      const totalAvailableForPrincipal = (standardMonthlyPayment - interestAcc) + extraThisMonth;
       const principalAcc = Math.min(totalAvailableForPrincipal, currentBalanceAcc);
       totalInterestAcc += interestAcc;
       currentBalanceAcc -= principalAcc;
@@ -39,7 +43,7 @@ export const calculateMortgage = (inputs: MortgageInputs): MortgageResults => {
       }
     }
 
-    // Capture data points for chart (sample every 12 months for better performance)
+    // Capture data points for chart
     if (m === 1 || m % 12 === 0 || m === totalMonths) {
       amortization.push({
         month: m,

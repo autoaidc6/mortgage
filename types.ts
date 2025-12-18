@@ -3,7 +3,7 @@ export interface MortgageInputs {
   balance: number;
   interestRate: number;
   loanTerm: number;
-  extraPayment: number;
+  oneTimePayment: number;
 }
 
 export interface AmortizationPoint {

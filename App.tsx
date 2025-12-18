@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { Home, Calculator, PiggyBank, ArrowRight, Lightbulb, Info } from 'lucide-react';
 import InputGroup from './components/InputGroup';
 import MortgageChart from './components/MortgageChart';
 import SavingsBreakdown from './components/SavingsBreakdown';
-import { MortgageInputs, MortgageResults, PeriodicSavings } from './types';
+import { MortgageInputs, PeriodicSavings } from './types';
 import { calculateMortgage, formatCurrency } from './services/mortgageCalculator';
 
 const App: React.FC = () => {
@@ -13,7 +13,7 @@ const App: React.FC = () => {
     balance: 350000,
     interestRate: 6.5,
     loanTerm: 30,
-    extraPayment: 500,
+    oneTimePayment: 10000, // Changed to one-time default
   });
 
   const [aiInsight, setAiInsight] = useState<string | null>(null);
@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const results = useMemo(() => calculateMortgage(inputs), [inputs]);
 
   const periodicSavings = useMemo((): PeriodicSavings => {
+    // Total original loan duration in days
     const totalDays = inputs.loanTerm * 365.25;
     return {
       day: results.totalSavings / totalDays,
@@ -36,23 +37,22 @@ const App: React.FC = () => {
     setLoadingAi(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Act as a senior mortgage advisor. Analyze these results for a user:
+      const prompt = `Act as a senior mortgage advisor. Analyze these results for a user who is considering a ONE-TIME lump sum payment:
         Mortgage Balance: ${inputs.balance}
         Interest Rate: ${inputs.interestRate}%
-        Standard Monthly Payment: ${results.standardMonthlyPayment}
-        Extra Monthly Payment: ${inputs.extraPayment}
+        One-Time Lump Sum Payment: ${inputs.oneTimePayment}
         Total Interest Saved: ${results.totalSavings}
         Time Saved: ${Math.floor(results.monthsSaved / 12)} years and ${results.monthsSaved % 12} months.
-        Provide a concise, motivating 3-sentence insight about how this extra payment impacts their financial freedom and wealth building. Mention one specific "future tip" like bi-weekly payments.`;
+        Provide a concise, motivating 3-sentence insight about how this single action impacts their financial freedom. Mention how lump sum payments early in the loan are much more powerful than late ones.`;
       
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
       });
-      setAiInsight(response.text || "Keep paying that extra! You're building wealth significantly faster.");
+      setAiInsight(response.text || "A single lump sum payment drastically reduces your interest overhead over time.");
     } catch (error) {
       console.error("AI Error:", error);
-      setAiInsight("Making extra payments is one of the most effective ways to build equity and save on long-term interest costs.");
+      setAiInsight("Lump sum payments are highly effective at reducing the total interest paid, especially when done early in the loan term.");
     } finally {
       setLoadingAi(false);
     }
@@ -73,7 +73,7 @@ const App: React.FC = () => {
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">SmartMortgage</h1>
           </div>
-          <p className="text-slate-500 font-medium">Strategize your path to home equity faster.</p>
+          <p className="text-slate-500 font-medium">Visualize the power of a single lump-sum payment.</p>
         </div>
         <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl px-6 py-4 flex items-center gap-6 shadow-sm">
           <div>
@@ -122,17 +122,17 @@ const App: React.FC = () => {
               />
               
               <div className="pt-4 border-t border-slate-100">
-                <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
                   <InputGroup 
-                    label="Extra Monthly Payment" 
-                    value={inputs.extraPayment} 
-                    onChange={(v) => handleInputChange('extraPayment', v)}
+                    label="One-Time Extra Payment" 
+                    value={inputs.oneTimePayment} 
+                    onChange={(v) => handleInputChange('oneTimePayment', v)}
                     prefix="$"
-                    tooltip="Additional principal you plan to pay every month."
+                    tooltip="A single lump-sum amount you plan to pay toward your principal today."
                   />
-                  <p className="text-xs text-blue-600/70 mt-3 flex items-center gap-1">
+                  <p className="text-xs text-emerald-700/70 mt-3 flex items-center gap-1">
                     <Info className="w-3 h-3" />
-                    Applied directly to principal each month.
+                    Applied directly to principal once, immediately.
                   </p>
                 </div>
               </div>
@@ -150,7 +150,7 @@ const App: React.FC = () => {
             ) : (
               <>
                 <Lightbulb className="w-5 h-5 text-yellow-400 group-hover:animate-pulse" />
-                Ask Gemini Financial Insights
+                Analyze Lump Sum Impact
               </>
             )}
           </button>
@@ -166,41 +166,41 @@ const App: React.FC = () => {
         <div className="lg:col-span-8 space-y-8">
           {/* Main Highlights */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-8 rounded-3xl text-white shadow-xl shadow-blue-200 flex flex-col justify-between">
+            <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 p-8 rounded-3xl text-white shadow-xl shadow-emerald-200 flex flex-col justify-between">
               <div>
                 <div className="bg-white/20 w-fit p-3 rounded-2xl mb-4">
                   <PiggyBank className="w-8 h-8" />
                 </div>
-                <h3 className="text-blue-100 font-medium uppercase text-xs tracking-widest mb-1">Total Savings</h3>
+                <h3 className="text-emerald-100 font-medium uppercase text-xs tracking-widest mb-1">Total Interest Avoided</h3>
                 <p className="text-5xl font-black mb-2">{formatCurrency(results.totalSavings)}</p>
               </div>
-              <p className="text-blue-100/80 text-sm">You'll avoid paying this much interest over the life of your loan by paying ${inputs.extraPayment} extra per month.</p>
+              <p className="text-emerald-100/80 text-sm">By paying ${formatCurrency(inputs.oneTimePayment)} once, you avoid this massive interest cost over {inputs.loanTerm} years.</p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
               <div>
-                <h3 className="text-slate-400 font-medium uppercase text-xs tracking-widest mb-4">Time Savings</h3>
+                <h3 className="text-slate-400 font-medium uppercase text-xs tracking-widest mb-4">Maturity Advanced</h3>
                 <div className="flex items-center gap-4">
                   <div className="text-center">
                     <p className="text-3xl font-black text-slate-800">{inputs.loanTerm}</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Original Years</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Original Yrs</p>
                   </div>
                   <ArrowRight className="text-slate-200" />
-                  <div className="text-center bg-blue-50 px-4 py-2 rounded-2xl border border-blue-100">
-                    <p className="text-3xl font-black text-blue-600">{results.yearsToPayoff.toFixed(1)}</p>
-                    <p className="text-[10px] text-blue-400 font-bold uppercase">New Payoff (Years)</p>
+                  <div className="text-center bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
+                    <p className="text-3xl font-black text-emerald-600">{results.yearsToPayoff.toFixed(1)}</p>
+                    <p className="text-[10px] text-emerald-400 font-bold uppercase">New Payoff (Yrs)</p>
                   </div>
                 </div>
               </div>
               <p className="text-slate-500 text-sm mt-6 font-medium">
-                Shaving <span className="text-blue-600 font-bold">{Math.floor(results.monthsSaved / 12)} years and {results.monthsSaved % 12} months</span> off your mortgage.
+                This single check saves you <span className="text-emerald-600 font-bold">{Math.floor(results.monthsSaved / 12)} years and {results.monthsSaved % 12} months</span> of mortgage payments.
               </p>
             </div>
           </div>
 
           {/* Savings Periodic Breakdown */}
           <section className="space-y-4">
-            <h3 className="text-slate-800 font-bold px-1">Incremental Interest Avoided</h3>
+            <h3 className="text-slate-800 font-bold px-1">Effective Savings Rate (Lump Sum Amortized)</h3>
             <SavingsBreakdown savings={periodicSavings} />
           </section>
 
@@ -208,43 +208,27 @@ const App: React.FC = () => {
           <section className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Amortization Comparison</h3>
-                <p className="text-sm text-slate-500">Balance reduction over time</p>
+                <h3 className="text-lg font-bold text-slate-800">Lump Sum Impact</h3>
+                <p className="text-sm text-slate-500">Watch the balance drop instantly at the start.</p>
               </div>
               <div className="flex items-center gap-4 text-xs font-semibold uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-slate-300"></div>
-                  <span className="text-slate-500">Standard</span>
+                  <span className="text-slate-500">Original</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  <span className="text-blue-600">Accelerated</span>
+                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                  <span className="text-emerald-600">With One-Time Payment</span>
                 </div>
               </div>
             </div>
             <MortgageChart data={results.amortization} />
           </section>
-
-          {/* Educational Footer Tips */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-4 rounded-2xl border border-slate-100 bg-white/50">
-              <h4 className="font-bold text-slate-700 text-sm mb-2">Bi-Weekly Tip</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">Consider splitting your payment in half and paying every two weeks. This results in one extra full payment per year!</p>
-            </div>
-            <div className="p-4 rounded-2xl border border-slate-100 bg-white/50">
-              <h4 className="font-bold text-slate-700 text-sm mb-2">Recasting vs Refi</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">Extra payments build equity. Ask your lender about "Recasting" to lower your monthly minimum after a large principal payment.</p>
-            </div>
-            <div className="p-4 rounded-2xl border border-slate-100 bg-white/50">
-              <h4 className="font-bold text-slate-700 text-sm mb-2">Tax Benefits</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">Mortgage interest is often tax-deductible. Consult a CPA to see how paying down your loan impacts your tax situation.</p>
-            </div>
-          </div>
         </div>
       </div>
 
       <footer className="mt-16 text-center text-slate-400 text-xs border-t border-slate-200 pt-8">
-        <p>© {new Date().getFullYear()} SmartMortgage. Calculations are estimates. Check with your lender for exact figures.</p>
+        <p>© {new Date().getFullYear()} SmartMortgage. Periodic savings represent the total interest saved divided by the original loan duration.</p>
       </footer>
     </div>
   );

@@ -31,8 +31,8 @@ const MortgageChart: React.FC<MortgageChartProps> = ({ data }) => {
               <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
             </linearGradient>
             <linearGradient id="colorAcc" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+              <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -56,7 +56,7 @@ const MortgageChart: React.FC<MortgageChartProps> = ({ data }) => {
           />
           <Legend verticalAlign="top" height={36} align="right" iconType="circle" />
           <Area 
-            name="Standard Payoff"
+            name="Standard Path"
             type="monotone" 
             dataKey="standardBalance" 
             stroke="#94a3b8" 
@@ -66,10 +66,10 @@ const MortgageChart: React.FC<MortgageChartProps> = ({ data }) => {
             animationDuration={1000}
           />
           <Area 
-            name="Accelerated Payoff"
+            name="Lump Sum Path"
             type="monotone" 
             dataKey="acceleratedBalance" 
-            stroke="#3b82f6" 
+            stroke="#10b981" 
             strokeWidth={3}
             fillOpacity={1} 
             fill="url(#colorAcc)" 
