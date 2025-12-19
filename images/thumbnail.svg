@@ -1,0 +1,41 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Gradient -->
+  <rect width="800" height="600" fill="url(#paint0_linear_800_600)"/>
+  
+  <!-- Decorative Background Circles -->
+  <circle cx="700" cy="100" r="150" fill="white" fill-opacity="0.05"/>
+  <circle cx="100" cy="500" r="100" fill="white" fill-opacity="0.03"/>
+  
+  <!-- Abstract Growth Line -->
+  <path d="M150 450C250 450 300 350 400 300C500 250 600 280 700 150" stroke="url(#paint1_linear_800_600)" stroke-width="12" stroke-linecap="round" stroke-dasharray="20 20"/>
+  
+  <!-- House Icon -->
+  <g transform="translate(350, 200)">
+    <path d="M50 0L0 40H15V90H85V40H100L50 0Z" fill="white" fill-opacity="0.9"/>
+    <rect x="40" y="60" width="20" height="30" fill="#1E1B4B"/>
+    <path d="M50 5L10 37H90L50 5Z" fill="#10B981"/>
+  </g>
+
+  <!-- Sparkle Elements -->
+  <path d="M480 180L485 195L500 200L485 205L480 220L475 205L460 200L475 195L480 180Z" fill="#FDE047"/>
+  <path d="M540 240L543 249L552 252L543 255L540 264L537 255L528 252L537 249L540 240Z" fill="#FDE047" fill-opacity="0.6"/>
+
+  <!-- Branding Text -->
+  <text x="400" y="420" text-anchor="middle" fill="white" style="font-family: 'Inter', sans-serif; font-weight: 900; font-size: 56px; letter-spacing: -0.02em;">SmartMortgage</text>
+  <text x="400" y="460" text-anchor="middle" fill="#93C5FD" style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: 0.1em; text-transform: uppercase;">Calculator & Advisor</text>
+
+  <!-- Bottom Accent Bar -->
+  <rect y="580" width="800" height="20" fill="#10B981"/>
+
+  <!-- Definitions -->
+  <defs>
+    <linearGradient id="paint0_linear_800_600" x1="0" y1="0" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#312E81"/>
+      <stop offset="1" stop-color="#1E3A8A"/>
+    </linearGradient>
+    <linearGradient id="paint1_linear_800_600" x1="150" y1="450" x2="700" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10B981"/>
+      <stop offset="1" stop-color="#3B82F6"/>
+    </linearGradient>
+  </defs>
+</svg>
