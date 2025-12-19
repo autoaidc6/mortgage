@@ -2,7 +2,7 @@
 import { MortgageInputs, MortgageResults, AmortizationPoint } from '../types';
 
 export const calculateMortgage = (inputs: MortgageInputs): MortgageResults => {
-  const { balance, interestRate, loanTerm, oneTimePayment } = inputs;
+  const { balance, interestRate, loanTerm, extraPayment, paymentType } = inputs;
   const monthlyRate = interestRate / 100 / 12;
   const totalMonths = loanTerm * 12;
 
@@ -29,8 +29,10 @@ export const calculateMortgage = (inputs: MortgageInputs): MortgageResults => {
     if (!accFinished) {
       interestAcc = currentBalanceAcc * monthlyRate;
       
-      // Apply the one-time payment ONLY in the first month
-      const extraThisMonth = m === 1 ? oneTimePayment : 0;
+      // Handle Payment Type logic
+      const extraThisMonth = paymentType === 'one-time' 
+        ? (m === 1 ? extraPayment : 0) 
+        : extraPayment;
       
       const totalAvailableForPrincipal = (standardMonthlyPayment - interestAcc) + extraThisMonth;
       const principalAcc = Math.min(totalAvailableForPrincipal, currentBalanceAcc);

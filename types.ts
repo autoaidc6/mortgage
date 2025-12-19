@@ -1,9 +1,12 @@
 
+export type PaymentType = 'one-time' | 'monthly';
+
 export interface MortgageInputs {
   balance: number;
   interestRate: number;
   loanTerm: number;
-  oneTimePayment: number;
+  extraPayment: number;
+  paymentType: PaymentType;
   currency: string;
 }
 

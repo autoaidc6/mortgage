@@ -3,7 +3,10 @@ import React, { useState, useMemo } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { Calculator, Clock, DollarSign, TrendingUp, ChevronDown, Sparkles, Calendar } from 'lucide-react';
 import InputGroup from './components/InputGroup';
-import { MortgageInputs, PeriodicSavings } from './types';
+import PrivacyPolicy from './PrivacyPolicy';
+import TermsOfService from './TermsOfService';
+import Disclaimer from './Disclaimer';
+import { MortgageInputs, PeriodicSavings, PaymentType } from './types';
 import { calculateMortgage, formatCurrency, getCurrencySymbol } from './services/mortgageCalculator';
 
 const CURRENCIES = [
@@ -17,12 +20,16 @@ const CURRENCIES = [
   { code: 'INR', label: 'Indian Rupee (₹)' },
 ];
 
+type AppView = 'calculator' | 'privacy' | 'terms' | 'disclaimer';
+
 const App: React.FC = () => {
+  const [view, setView] = useState<AppView>('calculator');
   const [inputs, setInputs] = useState<MortgageInputs>({
     balance: 300000,
     interestRate: 6.5,
     loanTerm: 30,
-    oneTimePayment: 10000,
+    extraPayment: 10000,
+    paymentType: 'one-time',
     currency: 'USD'
   });
 
@@ -69,27 +76,34 @@ const App: React.FC = () => {
     setLoadingAi(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Analyze: Mortgage ${inputs.balance}, Rate ${inputs.interestRate}%, One-time extra ${inputs.oneTimePayment}. 
+      const prompt = `Analyze: Mortgage ${inputs.balance}, Rate ${inputs.interestRate}%, ${inputs.paymentType} extra payment of ${inputs.extraPayment}. 
       Saved: ${results.totalSavings}, Time: ${timeResults.yearsSaved} years ${timeResults.monthsSavedPart} months. 
-      Give a 2-sentence punchy advisor insight about why this specific lump sum is a wealth-building genius move.`;
+      Give a 2-sentence punchy advisor insight about why this specific ${inputs.paymentType} strategy is a wealth-building genius move.`;
       
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
       });
-      setAiInsight(response.text || "This lump sum drastically cuts your long-term interest costs.");
+      setAiInsight(response.text || "This strategy drastically cuts your long-term interest costs.");
     } catch (error) {
-      setAiInsight("Lump sum payments drastically reduce interest when applied early.");
+      setAiInsight("Lump sum or recurring payments drastically reduce interest when applied early.");
     } finally {
       setLoadingAi(false);
     }
   };
 
-  const handleInputChange = (key: keyof MortgageInputs, value: string) => {
-    setInputs(prev => ({ ...prev, [key]: key === 'currency' ? value : Number(value) }));
+  const handleInputChange = (key: keyof MortgageInputs | string, value: string) => {
+    setInputs(prev => ({ 
+      ...prev, 
+      [key]: key === 'currency' || key === 'paymentType' ? value : Number(value) 
+    }));
   };
 
   const symbol = getCurrencySymbol(inputs.currency);
+
+  if (view === 'privacy') return <PrivacyPolicy onBack={() => setView('calculator')} />;
+  if (view === 'terms') return <TermsOfService onBack={() => setView('calculator')} />;
+  if (view === 'disclaimer') return <Disclaimer onBack={() => setView('calculator')} />;
 
   return (
     <div className="min-h-screen flex flex-col items-center py-12 px-4 gap-12">
@@ -100,7 +114,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Main Calculator Content */}
-      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         
         {/* Left Card: Input Form */}
         <div className="bg-white rounded-xl shadow-xl p-8 flex flex-col gap-6">
@@ -127,19 +141,23 @@ const App: React.FC = () => {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-700">Payment Type</label>
               <div className="relative">
-                <select className="w-full border border-slate-300 rounded-md py-2 px-3 text-sm text-slate-700 appearance-none bg-white outline-none">
-                  <option>One-Time Extra Payoff</option>
-                  <option disabled>Monthly Extra (Coming Soon)</option>
+                <select 
+                  value={inputs.paymentType}
+                  onChange={(e) => handleInputChange('paymentType', e.target.value)}
+                  className="w-full border border-slate-300 rounded-md py-2 px-3 text-sm text-slate-700 appearance-none bg-white outline-none"
+                >
+                  <option value="one-time">One-Time Extra Payoff</option>
+                  <option value="monthly">Monthly Extra Payoff</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
             </div>
 
             <InputGroup 
-              label={`One-Time Extra Payoff (${symbol}) *`}
-              value={inputs.oneTimePayment}
-              onChange={(v) => handleInputChange('oneTimePayment', v)}
-              placeholder="e.g., 10000"
+              label={`${inputs.paymentType === 'one-time' ? 'One-Time' : 'Monthly'} Extra Payoff (${symbol}) *`}
+              value={inputs.extraPayment}
+              onChange={(v) => handleInputChange('extraPayment', v)}
+              placeholder={inputs.paymentType === 'one-time' ? "e.g., 10000" : "e.g., 200"}
             />
 
             <InputGroup 
@@ -199,7 +217,7 @@ const App: React.FC = () => {
                       {timeResults.yearsSaved} {timeResults.yearsSaved === 1 ? 'year' : 'years'} and {timeResults.monthsSavedPart} {timeResults.monthsSavedPart === 1 ? 'month' : 'months'}
                     </p>
                     <p className="text-[10px] text-blue-100 opacity-60 mt-1">
-                      Pay off in {timeResults.yearsNew} years and {timeResults.monthsNewPart} months
+                      Pay off in {timeResults.yearsNew}y and {timeResults.monthsNewPart}m
                     </p>
                   </div>
 
@@ -323,9 +341,9 @@ const App: React.FC = () => {
       {/* Footer */}
       <footer className="mt-8 text-center space-y-4">
         <div className="flex items-center justify-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          <span className="cursor-pointer hover:text-blue-500 transition-colors">Privacy Policy</span>
-          <span className="cursor-pointer hover:text-blue-500 transition-colors">Terms of Service</span>
-          <span className="cursor-pointer hover:text-blue-500 transition-colors">Disclaimer</span>
+          <button onClick={() => setView('privacy')} className="hover:text-blue-500 transition-colors">Privacy Policy</button>
+          <button onClick={() => setView('terms')} className="hover:text-blue-500 transition-colors">Terms of Service</button>
+          <button onClick={() => setView('disclaimer')} className="hover:text-blue-500 transition-colors">Disclaimer</button>
         </div>
         <p className="text-[10px] text-slate-400">
           © 2025 Mortgage Payoff Calculator. All Rights Reserved.<br/>
