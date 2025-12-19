@@ -22,7 +22,7 @@
 
   <!-- Branding Text -->
   <text x="400" y="420" text-anchor="middle" fill="white" style="font-family: 'Inter', sans-serif; font-weight: 900; font-size: 56px; letter-spacing: -0.02em;">SmartMortgage</text>
-  <text x="400" y="460" text-anchor="middle" fill="#93C5FD" style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: 0.1em; text-transform: uppercase;">Calculator & Advisor</text>
+  <text x="400" y="460" text-anchor="middle" fill="#93C5FD" style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: 0.1em; text-transform: uppercase;">Calculator &amp; Advisor</text>
 
   <!-- Bottom Accent Bar -->
   <rect y="580" width="800" height="20" fill="#10B981"/>
