@@ -1,236 +1,215 @@
 
 import React, { useState, useMemo } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { Home, Calculator, PiggyBank, ArrowRight, Lightbulb, Info, Globe } from 'lucide-react';
+import { Calculator, Clock, DollarSign, TrendingUp, ChevronDown, Sparkles } from 'lucide-react';
 import InputGroup from './components/InputGroup';
 import { MortgageInputs } from './types';
 import { calculateMortgage, formatCurrency, getCurrencySymbol } from './services/mortgageCalculator';
 
-const CURRENCIES = [
-  { code: 'USD', label: 'US Dollar ($)' },
-  { code: 'EUR', label: 'Euro (€)' },
-  { code: 'GBP', label: 'British Pound (£)' },
-  { code: 'JPY', label: 'Japanese Yen (¥)' },
-  { code: 'CAD', label: 'Canadian Dollar (C$)' },
-  { code: 'AUD', label: 'Australian Dollar (A$)' },
-  { code: 'CHF', label: 'Swiss Franc (CHF)' },
-  { code: 'INR', label: 'Indian Rupee (₹)' },
-];
-
 const App: React.FC = () => {
   const [inputs, setInputs] = useState<MortgageInputs>({
-    balance: 350000,
+    balance: 300000,
     interestRate: 6.5,
     loanTerm: 30,
     oneTimePayment: 10000,
     currency: 'USD'
   });
 
+  const [hasCalculated, setHasCalculated] = useState(false);
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
 
   const results = useMemo(() => calculateMortgage(inputs), [inputs]);
 
+  const handleCalculate = () => {
+    setHasCalculated(true);
+    // Optional: Reset AI insight on new calculation if needed, 
+    // or keep it to allow manual trigger.
+  };
+
   const getAiInsight = async () => {
     setLoadingAi(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Act as a senior mortgage advisor. Analyze these results for a user who is considering a ONE-TIME lump sum payment:
-        Mortgage Balance: ${inputs.balance} (${inputs.currency})
-        Interest Rate: ${inputs.interestRate}%
-        One-Time Lump Sum Payment: ${inputs.oneTimePayment}
-        Total Interest Saved: ${results.totalSavings}
-        Time Saved: ${Math.floor(results.monthsSaved / 12)} years and ${results.monthsSaved % 12} months.
-        Provide a concise, motivating 3-sentence insight about how this single action impacts their financial freedom. Mention how lump sum payments early in the loan are much more powerful than late ones.`;
+      const prompt = `Analyze: Mortgage ${inputs.balance}, Rate ${inputs.interestRate}%, One-time extra ${inputs.oneTimePayment}. 
+      Saved: ${results.totalSavings}, Time: ${Math.floor(results.monthsSaved / 12)} years. 
+      Give a 2-sentence punchy advisor insight about why this specific lump sum is a wealth-building genius move.`;
       
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
       });
-      setAiInsight(response.text || "A single lump sum payment drastically reduces your interest overhead over time.");
+      setAiInsight(response.text || "This lump sum drastically cuts your long-term interest costs.");
     } catch (error) {
-      console.error("AI Error:", error);
-      setAiInsight("Lump sum payments are highly effective at reducing the total interest paid, especially when done early in the loan term.");
+      setAiInsight("Lump sum payments drastically reduce interest when applied early.");
     } finally {
       setLoadingAi(false);
     }
   };
 
-  const handleInputChange = (key: keyof MortgageInputs, value: number | string) => {
-    setInputs(prev => ({ ...prev, [key]: value }));
+  const handleInputChange = (key: keyof MortgageInputs, value: string) => {
+    setInputs(prev => ({ ...prev, [key]: key === 'currency' ? value : Number(value) }));
   };
 
-  const currentSymbol = getCurrencySymbol(inputs.currency);
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
-      {/* Header */}
-      <header className="mb-10 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-            <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
-              <Home className="text-white w-6 h-6" />
-            </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">SmartMortgage</h1>
-          </div>
-          <p className="text-slate-500 font-medium">Visualize the power of a single lump-sum payment.</p>
-        </div>
-        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl px-6 py-4 flex flex-wrap items-center gap-6 shadow-sm justify-center md:justify-end">
-          <div className="text-left">
-            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Base Payment</p>
-            <p className="text-2xl font-black text-slate-800">{formatCurrency(results.standardMonthlyPayment, inputs.currency)}</p>
-          </div>
-          <div className="hidden sm:block h-10 w-[1px] bg-slate-200"></div>
-          <div className="text-left">
-            <p className="text-[10px] uppercase font-bold text-emerald-600 tracking-widest">Total Interest Saved</p>
-            <p className="text-2xl font-black text-emerald-600">{formatCurrency(results.totalSavings, inputs.currency)}</p>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col items-center py-12 px-4 gap-12">
+      {/* Header Section */}
+      <div className="text-center space-y-2">
+        <h1 className="text-4xl font-bold text-indigo-900 tracking-tight">Mortgage Payoff Calculator</h1>
+        <p className="text-blue-600 font-medium">Discover how much money you can save with an extra mortgage payment</p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Form */}
-        <div className="lg:col-span-4 space-y-6">
-          <section className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-blue-600" />
-                <h2 className="text-lg font-bold text-slate-800">Loan Details</h2>
-              </div>
+      {/* Main Calculator Content */}
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+        
+        {/* Left Card: Input Form */}
+        <div className="bg-white rounded-xl shadow-xl p-8 flex flex-col gap-6">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-indigo-900">Calculate Your Savings</h2>
+            <p className="text-xs text-blue-500 font-medium">Enter your mortgage details below</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-700">Payment Type</label>
               <div className="relative">
-                <select 
-                  value={inputs.currency}
-                  onChange={(e) => handleInputChange('currency', e.target.value)}
-                  className="appearance-none bg-slate-50 border border-slate-200 rounded-lg py-1 px-8 text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                >
-                  {CURRENCIES.map(c => (
-                    <option key={c.code} value={c.code}>{c.code}</option>
-                  ))}
+                <select className="w-full border border-slate-300 rounded-md py-2 px-3 text-sm text-slate-700 appearance-none bg-white outline-none">
+                  <option>One-Time Extra Payoff</option>
+                  <option disabled>Monthly Extra (Coming Soon)</option>
                 </select>
-                <Globe className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
             </div>
-            
-            <div className="space-y-6">
-              <InputGroup 
-                label="Mortgage Balance" 
-                value={inputs.balance} 
-                onChange={(v) => handleInputChange('balance', v)}
-                prefix={currentSymbol}
-                tooltip="The current remaining principal on your loan."
-              />
-              <InputGroup 
-                label="Interest Rate (APR)" 
-                value={inputs.interestRate} 
-                onChange={(v) => handleInputChange('interestRate', v)}
-                suffix="%"
-                step={0.1}
-                tooltip="Your annual percentage rate for the mortgage."
-              />
-              <InputGroup 
-                label="Loan Term" 
-                value={inputs.loanTerm} 
-                onChange={(v) => handleInputChange('loanTerm', v)}
-                suffix="YRS"
-                tooltip="Original length of your loan agreement."
-              />
-              
-              <div className="pt-4 border-t border-slate-100">
-                <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-                  <InputGroup 
-                    label="One-Time Extra Payment" 
-                    value={inputs.oneTimePayment} 
-                    onChange={(v) => handleInputChange('oneTimePayment', v)}
-                    prefix={currentSymbol}
-                    tooltip="A single lump-sum amount you plan to pay toward your principal today."
-                  />
-                  <p className="text-xs text-emerald-700/70 mt-3 flex items-center gap-1">
-                    <Info className="w-3 h-3" />
-                    Applied directly to principal once, immediately.
-                  </p>
+
+            <InputGroup 
+              label={`One-Time Extra Payoff (${getCurrencySymbol(inputs.currency)})`}
+              required
+              value={inputs.oneTimePayment}
+              onChange={(v) => handleInputChange('oneTimePayment', v)}
+              placeholder="e.g., 10000"
+            />
+
+            <InputGroup 
+              label={`Total Mortgage Amount (${getCurrencySymbol(inputs.currency)})`}
+              value={inputs.balance}
+              onChange={(v) => handleInputChange('balance', v)}
+            />
+
+            <InputGroup 
+              label="Annual Interest Rate (%)"
+              value={inputs.interestRate}
+              onChange={(v) => handleInputChange('interestRate', v)}
+            />
+
+            <InputGroup 
+              label="Mortgage Term (Years)"
+              value={inputs.loanTerm}
+              onChange={(v) => handleInputChange('loanTerm', v)}
+            />
+          </div>
+
+          <button 
+            onClick={handleCalculate}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md flex items-center justify-center gap-2 transition-colors mt-2"
+          >
+            <Calculator className="w-4 h-4" />
+            Calculate Savings
+          </button>
+        </div>
+
+        {/* Right Card: Results Display */}
+        <div className="bg-white rounded-xl shadow-xl flex items-center justify-center p-8 text-center min-h-[500px]">
+          {!hasCalculated ? (
+            <div className="flex flex-col items-center gap-4 text-blue-400">
+              <TrendingUp className="w-16 h-16 opacity-40 rotate-180 scale-y-[-1]" />
+              <p className="text-sm font-medium text-blue-500/80 px-12">
+                Enter your mortgage details to see your potential savings
+              </p>
+            </div>
+          ) : (
+            <div className="w-full flex flex-col h-full animate-in fade-in duration-500">
+              <div className="mb-12">
+                <h3 className="text-lg font-bold text-indigo-900 mb-8">Estimated Total Savings</h3>
+                <div className="flex flex-col gap-2">
+                  <span className="text-6xl font-black text-indigo-900 tracking-tighter">
+                    {formatCurrency(results.totalSavings, inputs.currency)}
+                  </span>
+                  <p className="text-blue-500 font-bold text-sm uppercase tracking-widest">Saved in Interest</p>
                 </div>
               </div>
-            </div>
-          </section>
 
-          {/* AI Advisor Button */}
-          <button 
-            onClick={getAiInsight}
-            disabled={loadingAi}
-            className="w-full bg-slate-900 hover:bg-black text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all group active:scale-95 disabled:opacity-50 shadow-lg"
-          >
-            {loadingAi ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white" />
-            ) : (
-              <>
-                <Lightbulb className="w-5 h-5 text-yellow-400 group-hover:animate-pulse" />
-                Analyze Lump Sum Impact
-              </>
-            )}
-          </button>
+              <div className="grid grid-cols-2 gap-8 border-t border-slate-100 pt-8 mt-auto">
+                <div className="text-left space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">New Term</p>
+                  <p className="text-2xl font-black text-indigo-900">{results.yearsToPayoff.toFixed(1)} Years</p>
+                  <p className="text-xs text-blue-500 font-medium">Reduced from {inputs.loanTerm}</p>
+                </div>
+                <div className="text-left space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Time Saved</p>
+                  <p className="text-2xl font-black text-emerald-600">
+                    {Math.floor(results.monthsSaved / 12)}y {results.monthsSaved % 12}m
+                  </p>
+                  <p className="text-xs text-emerald-500 font-medium">Faster to Freedom</p>
+                </div>
+              </div>
 
-          {aiInsight && (
-            <div className="bg-white p-6 rounded-2xl border-l-4 border-l-blue-600 shadow-md animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <p className="text-sm text-slate-700 leading-relaxed italic">"{aiInsight}"</p>
+              <div className="mt-10">
+                <button 
+                  onClick={getAiInsight}
+                  disabled={loadingAi}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 mx-auto disabled:opacity-50"
+                >
+                  {loadingAi ? "Generating..." : <><Sparkles className="w-3 h-3" /> Get Smart AI Insight</>}
+                </button>
+                {aiInsight && (
+                  <p className="text-xs text-slate-500 italic mt-3 max-w-sm mx-auto leading-relaxed">
+                    "{aiInsight}"
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Right Column: Key Results */}
-        <div className="lg:col-span-8 space-y-8">
-          {/* Main Highlights */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 p-8 rounded-3xl text-white shadow-xl shadow-emerald-200 flex flex-col justify-between">
-              <div>
-                <div className="bg-white/20 w-fit p-3 rounded-2xl mb-4">
-                  <PiggyBank className="w-8 h-8" />
-                </div>
-                <h3 className="text-emerald-100 font-medium uppercase text-xs tracking-widest mb-1">Total Savings</h3>
-                <p className="text-5xl font-black mb-2">{formatCurrency(results.totalSavings, inputs.currency)}</p>
-              </div>
-              <p className="text-emerald-100/80 text-sm">By paying {formatCurrency(inputs.oneTimePayment, inputs.currency)} once, you avoid this massive interest cost over {inputs.loanTerm} years.</p>
-            </div>
-
-            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
-              <div>
-                <h3 className="text-slate-400 font-medium uppercase text-xs tracking-widest mb-4">Maturity Advanced</h3>
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <p className="text-3xl font-black text-slate-800">{inputs.loanTerm}</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Original Yrs</p>
-                  </div>
-                  <ArrowRight className="text-slate-200" />
-                  <div className="text-center bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
-                    <p className="text-3xl font-black text-emerald-600">{results.yearsToPayoff.toFixed(1)}</p>
-                    <p className="text-[10px] text-emerald-400 font-bold uppercase">New Payoff (Yrs)</p>
-                  </div>
-                </div>
-              </div>
-              <p className="text-slate-500 text-sm mt-6 font-medium">
-                This single check saves you <span className="text-emerald-600 font-bold">{Math.floor(results.monthsSaved / 12)} years and {results.monthsSaved % 12} months</span> of mortgage payments.
-              </p>
-            </div>
+      {/* Feature Section: Bottom Cards */}
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl shadow-md p-8 flex flex-col items-center text-center gap-3 transition-transform hover:scale-[1.02]">
+          <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
+            <Clock className="w-6 h-6 text-blue-600" />
           </div>
+          <h4 className="font-bold text-indigo-900">Save Time</h4>
+          <p className="text-[10px] text-slate-500 leading-tight">Pay off your mortgage years earlier with an extra payment</p>
+        </div>
 
-          {/* Educational Content */}
-          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Why Lump Sum Payments Work</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-slate-600 leading-relaxed">
-              <div>
-                <p className="font-semibold text-slate-800 mb-1">Interest Avoidance</p>
-                <p>Every dollar you pay today stops generating interest for the rest of the loan term. At 6.5%, a ${formatCurrency(inputs.oneTimePayment, inputs.currency)} payment today prevents roughly ${formatCurrency(results.totalSavings, inputs.currency)} in interest over 30 years.</p>
-              </div>
-              <div>
-                <p className="font-semibold text-slate-800 mb-1">Equity Velocity</p>
-                <p>One-time payments skip the "interest-heavy" early years of your amortization schedule, directly attacking the principal balance and accelerating your path to 100% ownership.</p>
-              </div>
-            </div>
+        <div className="bg-white rounded-xl shadow-md p-8 flex flex-col items-center text-center gap-3 transition-transform hover:scale-[1.02]">
+          <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
+            <DollarSign className="w-6 h-6 text-blue-600" />
           </div>
+          <h4 className="font-bold text-indigo-900">Save Money</h4>
+          <p className="text-[10px] text-slate-500 leading-tight">Reduce total interest paid over the life of your loan</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-md p-8 flex flex-col items-center text-center gap-3 transition-transform hover:scale-[1.02]">
+          <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
+            <TrendingUp className="w-6 h-6 text-blue-600" />
+          </div>
+          <h4 className="font-bold text-indigo-900">Build Equity</h4>
+          <p className="text-[10px] text-slate-500 leading-tight">Accelerate equity growth in your home</p>
         </div>
       </div>
 
-      <footer className="mt-16 text-center text-slate-400 text-xs border-t border-slate-200 pt-8">
-        <p>© {new Date().getFullYear()} SmartMortgage. Calculations are estimates. Check with your lender for exact figures.</p>
+      {/* Footer */}
+      <footer className="mt-8 text-center space-y-4">
+        <div className="flex items-center justify-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <span className="cursor-pointer hover:text-blue-500">Privacy Policy</span>
+          <span className="cursor-pointer hover:text-blue-500">Terms of Service</span>
+          <span className="cursor-pointer hover:text-blue-500">Disclaimer</span>
+        </div>
+        <p className="text-[10px] text-slate-400">
+          © 2025 Mortgage Payoff Calculator. All Rights Reserved.<br/>
+          Contact: info@example.com
+        </p>
       </footer>
     </div>
   );
