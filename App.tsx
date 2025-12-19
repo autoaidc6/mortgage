@@ -3,9 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { Home, Calculator, PiggyBank, ArrowRight, Lightbulb, Info, Globe } from 'lucide-react';
 import InputGroup from './components/InputGroup';
-import MortgageChart from './components/MortgageChart';
-import SavingsBreakdown from './components/SavingsBreakdown';
-import { MortgageInputs, PeriodicSavings } from './types';
+import { MortgageInputs } from './types';
 import { calculateMortgage, formatCurrency, getCurrencySymbol } from './services/mortgageCalculator';
 
 const CURRENCIES = [
@@ -32,17 +30,6 @@ const App: React.FC = () => {
   const [loadingAi, setLoadingAi] = useState(false);
 
   const results = useMemo(() => calculateMortgage(inputs), [inputs]);
-
-  const periodicSavings = useMemo((): PeriodicSavings => {
-    const totalDays = inputs.loanTerm * 365.25;
-    return {
-      day: results.totalSavings / totalDays,
-      week: results.totalSavings / (inputs.loanTerm * 52),
-      month: results.totalSavings / (inputs.loanTerm * 12),
-      year: results.totalSavings / inputs.loanTerm,
-      total: results.totalSavings
-    };
-  }, [results, inputs]);
 
   const getAiInsight = async () => {
     setLoadingAi(true);
@@ -189,7 +176,7 @@ const App: React.FC = () => {
           )}
         </div>
 
-        {/* Right Column: Visualization & Results */}
+        {/* Right Column: Key Results */}
         <div className="lg:col-span-8 space-y-8">
           {/* Main Highlights */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -225,37 +212,25 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Savings Periodic Breakdown */}
-          <section className="space-y-4">
-            <h3 className="text-slate-800 font-bold px-1">Effective Savings Rate (Lump Sum Amortized)</h3>
-            <SavingsBreakdown savings={periodicSavings} currency={inputs.currency} />
-          </section>
-
-          {/* Amortization Chart */}
-          <section className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          {/* Educational Content */}
+          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">Why Lump Sum Payments Work</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-slate-600 leading-relaxed">
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Lump Sum Impact</h3>
-                <p className="text-sm text-slate-500">Watch the balance drop instantly at the start.</p>
+                <p className="font-semibold text-slate-800 mb-1">Interest Avoidance</p>
+                <p>Every dollar you pay today stops generating interest for the rest of the loan term. At 6.5%, a ${formatCurrency(inputs.oneTimePayment, inputs.currency)} payment today prevents roughly ${formatCurrency(results.totalSavings, inputs.currency)} in interest over 30 years.</p>
               </div>
-              <div className="flex items-center gap-4 text-xs font-semibold uppercase tracking-wider">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-slate-300"></div>
-                  <span className="text-slate-500">Original</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                  <span className="text-emerald-600">Accelerated</span>
-                </div>
+              <div>
+                <p className="font-semibold text-slate-800 mb-1">Equity Velocity</p>
+                <p>One-time payments skip the "interest-heavy" early years of your amortization schedule, directly attacking the principal balance and accelerating your path to 100% ownership.</p>
               </div>
             </div>
-            <MortgageChart data={results.amortization} currency={inputs.currency} />
-          </section>
+          </div>
         </div>
       </div>
 
       <footer className="mt-16 text-center text-slate-400 text-xs border-t border-slate-200 pt-8">
-        <p>© {new Date().getFullYear()} SmartMortgage. Periodic savings represent the total interest saved divided by the original loan duration.</p>
+        <p>© {new Date().getFullYear()} SmartMortgage. Calculations are estimates. Check with your lender for exact figures.</p>
       </footer>
     </div>
   );
