@@ -6,9 +6,10 @@ import { TrendingUp, Calendar, Clock, Sparkles } from 'lucide-react';
 
 interface SavingsBreakdownProps {
   savings: PeriodicSavings;
+  currency: string;
 }
 
-const SavingsBreakdown: React.FC<SavingsBreakdownProps> = ({ savings }) => {
+const SavingsBreakdown: React.FC<SavingsBreakdownProps> = ({ savings, currency }) => {
   const cards = [
     { label: 'Per Day', value: savings.day, icon: <Clock className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
     { label: 'Per Week', value: savings.week, icon: <Calendar className="w-5 h-5" />, color: 'bg-indigo-50 text-indigo-600' },
@@ -26,7 +27,7 @@ const SavingsBreakdown: React.FC<SavingsBreakdownProps> = ({ savings }) => {
             </div>
             <span className="text-sm font-medium text-slate-500">{card.label}</span>
           </div>
-          <p className="text-xl font-bold text-slate-800">{formatCurrency(card.value)}</p>
+          <p className="text-xl font-bold text-slate-800">{formatCurrency(card.value, currency)}</p>
           <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-tight">Interest Saved</p>
         </div>
       ))}

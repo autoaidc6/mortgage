@@ -1,19 +1,31 @@
 
 import React, { useState, useMemo } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { Home, Calculator, PiggyBank, ArrowRight, Lightbulb, Info } from 'lucide-react';
+import { Home, Calculator, PiggyBank, ArrowRight, Lightbulb, Info, Globe } from 'lucide-react';
 import InputGroup from './components/InputGroup';
 import MortgageChart from './components/MortgageChart';
 import SavingsBreakdown from './components/SavingsBreakdown';
 import { MortgageInputs, PeriodicSavings } from './types';
-import { calculateMortgage, formatCurrency } from './services/mortgageCalculator';
+import { calculateMortgage, formatCurrency, getCurrencySymbol } from './services/mortgageCalculator';
+
+const CURRENCIES = [
+  { code: 'USD', label: 'US Dollar ($)' },
+  { code: 'EUR', label: 'Euro (€)' },
+  { code: 'GBP', label: 'British Pound (£)' },
+  { code: 'JPY', label: 'Japanese Yen (¥)' },
+  { code: 'CAD', label: 'Canadian Dollar (C$)' },
+  { code: 'AUD', label: 'Australian Dollar (A$)' },
+  { code: 'CHF', label: 'Swiss Franc (CHF)' },
+  { code: 'INR', label: 'Indian Rupee (₹)' },
+];
 
 const App: React.FC = () => {
   const [inputs, setInputs] = useState<MortgageInputs>({
     balance: 350000,
     interestRate: 6.5,
     loanTerm: 30,
-    oneTimePayment: 10000, // Changed to one-time default
+    oneTimePayment: 10000,
+    currency: 'USD'
   });
 
   const [aiInsight, setAiInsight] = useState<string | null>(null);
@@ -22,7 +34,6 @@ const App: React.FC = () => {
   const results = useMemo(() => calculateMortgage(inputs), [inputs]);
 
   const periodicSavings = useMemo((): PeriodicSavings => {
-    // Total original loan duration in days
     const totalDays = inputs.loanTerm * 365.25;
     return {
       day: results.totalSavings / totalDays,
@@ -38,7 +49,7 @@ const App: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Act as a senior mortgage advisor. Analyze these results for a user who is considering a ONE-TIME lump sum payment:
-        Mortgage Balance: ${inputs.balance}
+        Mortgage Balance: ${inputs.balance} (${inputs.currency})
         Interest Rate: ${inputs.interestRate}%
         One-Time Lump Sum Payment: ${inputs.oneTimePayment}
         Total Interest Saved: ${results.totalSavings}
@@ -58,9 +69,11 @@ const App: React.FC = () => {
     }
   };
 
-  const handleInputChange = (key: keyof MortgageInputs, value: number) => {
+  const handleInputChange = (key: keyof MortgageInputs, value: number | string) => {
     setInputs(prev => ({ ...prev, [key]: value }));
   };
+
+  const currentSymbol = getCurrencySymbol(inputs.currency);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
@@ -75,15 +88,15 @@ const App: React.FC = () => {
           </div>
           <p className="text-slate-500 font-medium">Visualize the power of a single lump-sum payment.</p>
         </div>
-        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl px-6 py-4 flex items-center gap-6 shadow-sm">
-          <div>
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl px-6 py-4 flex flex-wrap items-center gap-6 shadow-sm justify-center md:justify-end">
+          <div className="text-left">
             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Base Payment</p>
-            <p className="text-2xl font-black text-slate-800">{formatCurrency(results.standardMonthlyPayment)}</p>
+            <p className="text-2xl font-black text-slate-800">{formatCurrency(results.standardMonthlyPayment, inputs.currency)}</p>
           </div>
-          <div className="h-10 w-[1px] bg-slate-200"></div>
-          <div>
-            <p className="text-[10px] uppercase font-bold text-blue-600 tracking-widest">Total Savings</p>
-            <p className="text-2xl font-black text-blue-600">{formatCurrency(results.totalSavings)}</p>
+          <div className="hidden sm:block h-10 w-[1px] bg-slate-200"></div>
+          <div className="text-left">
+            <p className="text-[10px] uppercase font-bold text-emerald-600 tracking-widest">Total Interest Saved</p>
+            <p className="text-2xl font-black text-emerald-600">{formatCurrency(results.totalSavings, inputs.currency)}</p>
           </div>
         </div>
       </header>
@@ -92,9 +105,23 @@ const App: React.FC = () => {
         {/* Left Column: Form */}
         <div className="lg:col-span-4 space-y-6">
           <section className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-            <div className="flex items-center gap-2 mb-8">
-              <Calculator className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-bold text-slate-800">Loan Details</h2>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2">
+                <Calculator className="w-5 h-5 text-blue-600" />
+                <h2 className="text-lg font-bold text-slate-800">Loan Details</h2>
+              </div>
+              <div className="relative">
+                <select 
+                  value={inputs.currency}
+                  onChange={(e) => handleInputChange('currency', e.target.value)}
+                  className="appearance-none bg-slate-50 border border-slate-200 rounded-lg py-1 px-8 text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  {CURRENCIES.map(c => (
+                    <option key={c.code} value={c.code}>{c.code}</option>
+                  ))}
+                </select>
+                <Globe className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+              </div>
             </div>
             
             <div className="space-y-6">
@@ -102,7 +129,7 @@ const App: React.FC = () => {
                 label="Mortgage Balance" 
                 value={inputs.balance} 
                 onChange={(v) => handleInputChange('balance', v)}
-                prefix="$"
+                prefix={currentSymbol}
                 tooltip="The current remaining principal on your loan."
               />
               <InputGroup 
@@ -127,7 +154,7 @@ const App: React.FC = () => {
                     label="One-Time Extra Payment" 
                     value={inputs.oneTimePayment} 
                     onChange={(v) => handleInputChange('oneTimePayment', v)}
-                    prefix="$"
+                    prefix={currentSymbol}
                     tooltip="A single lump-sum amount you plan to pay toward your principal today."
                   />
                   <p className="text-xs text-emerald-700/70 mt-3 flex items-center gap-1">
@@ -143,7 +170,7 @@ const App: React.FC = () => {
           <button 
             onClick={getAiInsight}
             disabled={loadingAi}
-            className="w-full bg-slate-900 hover:bg-black text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all group active:scale-95 disabled:opacity-50"
+            className="w-full bg-slate-900 hover:bg-black text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all group active:scale-95 disabled:opacity-50 shadow-lg"
           >
             {loadingAi ? (
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white" />
@@ -171,10 +198,10 @@ const App: React.FC = () => {
                 <div className="bg-white/20 w-fit p-3 rounded-2xl mb-4">
                   <PiggyBank className="w-8 h-8" />
                 </div>
-                <h3 className="text-emerald-100 font-medium uppercase text-xs tracking-widest mb-1">Total Interest Avoided</h3>
-                <p className="text-5xl font-black mb-2">{formatCurrency(results.totalSavings)}</p>
+                <h3 className="text-emerald-100 font-medium uppercase text-xs tracking-widest mb-1">Total Savings</h3>
+                <p className="text-5xl font-black mb-2">{formatCurrency(results.totalSavings, inputs.currency)}</p>
               </div>
-              <p className="text-emerald-100/80 text-sm">By paying ${formatCurrency(inputs.oneTimePayment)} once, you avoid this massive interest cost over {inputs.loanTerm} years.</p>
+              <p className="text-emerald-100/80 text-sm">By paying {formatCurrency(inputs.oneTimePayment, inputs.currency)} once, you avoid this massive interest cost over {inputs.loanTerm} years.</p>
             </div>
 
             <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
@@ -201,7 +228,7 @@ const App: React.FC = () => {
           {/* Savings Periodic Breakdown */}
           <section className="space-y-4">
             <h3 className="text-slate-800 font-bold px-1">Effective Savings Rate (Lump Sum Amortized)</h3>
-            <SavingsBreakdown savings={periodicSavings} />
+            <SavingsBreakdown savings={periodicSavings} currency={inputs.currency} />
           </section>
 
           {/* Amortization Chart */}
@@ -218,11 +245,11 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                  <span className="text-emerald-600">With One-Time Payment</span>
+                  <span className="text-emerald-600">Accelerated</span>
                 </div>
               </div>
             </div>
-            <MortgageChart data={results.amortization} />
+            <MortgageChart data={results.amortization} currency={inputs.currency} />
           </section>
         </div>
       </div>

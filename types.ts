@@ -4,6 +4,7 @@ export interface MortgageInputs {
   interestRate: number;
   loanTerm: number;
   oneTimePayment: number;
+  currency: string;
 }
 
 export interface AmortizationPoint {

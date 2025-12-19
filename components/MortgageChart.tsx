@@ -11,13 +11,16 @@ import {
   Legend 
 } from 'recharts';
 import { AmortizationPoint } from '../types';
-import { formatCurrency } from '../services/mortgageCalculator';
+import { formatCurrency, getCurrencySymbol } from '../services/mortgageCalculator';
 
 interface MortgageChartProps {
   data: AmortizationPoint[];
+  currency: string;
 }
 
-const MortgageChart: React.FC<MortgageChartProps> = ({ data }) => {
+const MortgageChart: React.FC<MortgageChartProps> = ({ data, currency }) => {
+  const symbol = getCurrencySymbol(currency);
+  
   return (
     <div className="w-full h-[400px] mt-4">
       <ResponsiveContainer width="100%" height="100%">
@@ -44,13 +47,13 @@ const MortgageChart: React.FC<MortgageChartProps> = ({ data }) => {
             tick={{ fontSize: 12, fill: '#64748b' }}
           />
           <YAxis 
-            tickFormatter={(value) => `$${value/1000}k`}
+            tickFormatter={(value) => `${symbol}${value/1000}k`}
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 12, fill: '#64748b' }}
           />
           <Tooltip 
-            formatter={(value: number) => formatCurrency(value)}
+            formatter={(value: number) => formatCurrency(value, currency)}
             labelFormatter={(label) => `Year ${label}`}
             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
           />
