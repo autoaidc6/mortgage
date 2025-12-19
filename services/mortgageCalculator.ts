@@ -67,12 +67,12 @@ export const calculateMortgage = (inputs: MortgageInputs): MortgageResults => {
   };
 };
 
-export const formatCurrency = (value: number, currencyCode: string = 'USD') => {
+export const formatCurrency = (value: number, currencyCode: string = 'USD', decimals: number = 0) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyCode,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   }).format(value);
 };
 

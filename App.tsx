@@ -1,10 +1,21 @@
 
 import React, { useState, useMemo } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { Calculator, Clock, DollarSign, TrendingUp, ChevronDown, Sparkles } from 'lucide-react';
+import { Calculator, Clock, DollarSign, TrendingUp, ChevronDown, Sparkles, Calendar } from 'lucide-react';
 import InputGroup from './components/InputGroup';
-import { MortgageInputs } from './types';
+import { MortgageInputs, PeriodicSavings } from './types';
 import { calculateMortgage, formatCurrency, getCurrencySymbol } from './services/mortgageCalculator';
+
+const CURRENCIES = [
+  { code: 'USD', label: 'US Dollar ($)' },
+  { code: 'EUR', label: 'Euro (€)' },
+  { code: 'GBP', label: 'British Pound (£)' },
+  { code: 'JPY', label: 'Japanese Yen (¥)' },
+  { code: 'CAD', label: 'Canadian Dollar (C$)' },
+  { code: 'AUD', label: 'Australian Dollar (A$)' },
+  { code: 'CHF', label: 'Swiss Franc (CHF)' },
+  { code: 'INR', label: 'Indian Rupee (₹)' },
+];
 
 const App: React.FC = () => {
   const [inputs, setInputs] = useState<MortgageInputs>({
@@ -21,10 +32,37 @@ const App: React.FC = () => {
 
   const results = useMemo(() => calculateMortgage(inputs), [inputs]);
 
+  const timeResults = useMemo(() => {
+    const monthsSaved = results.monthsSaved;
+    const yearsSaved = Math.floor(monthsSaved / 12);
+    const monthsSavedPart = monthsSaved % 12;
+
+    const totalMonthsOriginal = inputs.loanTerm * 12;
+    const totalMonthsNew = totalMonthsOriginal - monthsSaved;
+    const yearsNew = Math.floor(totalMonthsNew / 12);
+    const monthsNewPart = totalMonthsNew % 12;
+
+    return {
+      yearsSaved,
+      monthsSavedPart,
+      yearsNew,
+      monthsNewPart
+    };
+  }, [results, inputs]);
+
+  const periodicSavings = useMemo((): PeriodicSavings => {
+    const years = inputs.loanTerm;
+    return {
+      day: results.totalSavings / (years * 365),
+      week: results.totalSavings / (years * 52),
+      month: results.totalSavings / (years * 12),
+      year: results.totalSavings / years,
+      total: results.totalSavings
+    };
+  }, [results, inputs]);
+
   const handleCalculate = () => {
     setHasCalculated(true);
-    // Optional: Reset AI insight on new calculation if needed, 
-    // or keep it to allow manual trigger.
   };
 
   const getAiInsight = async () => {
@@ -32,7 +70,7 @@ const App: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Analyze: Mortgage ${inputs.balance}, Rate ${inputs.interestRate}%, One-time extra ${inputs.oneTimePayment}. 
-      Saved: ${results.totalSavings}, Time: ${Math.floor(results.monthsSaved / 12)} years. 
+      Saved: ${results.totalSavings}, Time: ${timeResults.yearsSaved} years ${timeResults.monthsSavedPart} months. 
       Give a 2-sentence punchy advisor insight about why this specific lump sum is a wealth-building genius move.`;
       
       const response = await ai.models.generateContent({
@@ -51,6 +89,8 @@ const App: React.FC = () => {
     setInputs(prev => ({ ...prev, [key]: key === 'currency' ? value : Number(value) }));
   };
 
+  const symbol = getCurrencySymbol(inputs.currency);
+
   return (
     <div className="min-h-screen flex flex-col items-center py-12 px-4 gap-12">
       {/* Header Section */}
@@ -64,9 +104,23 @@ const App: React.FC = () => {
         
         {/* Left Card: Input Form */}
         <div className="bg-white rounded-xl shadow-xl p-8 flex flex-col gap-6">
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold text-indigo-900">Calculate Your Savings</h2>
-            <p className="text-xs text-blue-500 font-medium">Enter your mortgage details below</p>
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <h2 className="text-xl font-bold text-indigo-900">Calculate Your Savings</h2>
+              <p className="text-xs text-blue-500 font-medium">Enter your mortgage details below</p>
+            </div>
+            <div className="relative">
+              <select 
+                value={inputs.currency}
+                onChange={(e) => handleInputChange('currency', e.target.value)}
+                className="appearance-none bg-slate-50 border border-slate-200 rounded-md py-1 px-3 pr-8 text-[10px] font-bold text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+              >
+                {CURRENCIES.map(c => (
+                  <option key={c.code} value={c.code}>{c.code}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -82,15 +136,14 @@ const App: React.FC = () => {
             </div>
 
             <InputGroup 
-              label={`One-Time Extra Payoff (${getCurrencySymbol(inputs.currency)})`}
-              required
+              label={`One-Time Extra Payoff (${symbol}) *`}
               value={inputs.oneTimePayment}
               onChange={(v) => handleInputChange('oneTimePayment', v)}
               placeholder="e.g., 10000"
             />
 
             <InputGroup 
-              label={`Total Mortgage Amount (${getCurrencySymbol(inputs.currency)})`}
+              label={`Total Mortgage Amount (${symbol})`}
               value={inputs.balance}
               onChange={(v) => handleInputChange('balance', v)}
             />
@@ -118,51 +171,119 @@ const App: React.FC = () => {
         </div>
 
         {/* Right Card: Results Display */}
-        <div className="bg-white rounded-xl shadow-xl flex items-center justify-center p-8 text-center min-h-[500px]">
+        <div className="flex flex-col gap-6 min-h-[500px]">
           {!hasCalculated ? (
-            <div className="flex flex-col items-center gap-4 text-blue-400">
-              <TrendingUp className="w-16 h-16 opacity-40 rotate-180 scale-y-[-1]" />
+            <div className="bg-white rounded-xl shadow-xl flex flex-col items-center justify-center p-8 text-center h-full">
+              <TrendingUp className="w-16 h-16 opacity-40 text-blue-400 rotate-180 scale-y-[-1] mb-4" />
               <p className="text-sm font-medium text-blue-500/80 px-12">
                 Enter your mortgage details to see your potential savings
               </p>
             </div>
           ) : (
-            <div className="w-full flex flex-col h-full animate-in fade-in duration-500">
-              <div className="mb-12">
-                <h3 className="text-lg font-bold text-indigo-900 mb-8">Estimated Total Savings</h3>
-                <div className="flex flex-col gap-2">
-                  <span className="text-6xl font-black text-indigo-900 tracking-tighter">
-                    {formatCurrency(results.totalSavings, inputs.currency)}
-                  </span>
-                  <p className="text-blue-500 font-bold text-sm uppercase tracking-widest">Saved in Interest</p>
+            <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+              {/* Savings Summary Dashboard */}
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-800 rounded-xl shadow-xl p-6 text-white">
+                <div className="flex items-center gap-2 mb-6">
+                  <Sparkles className="w-5 h-5 text-blue-100" />
+                  <h3 className="text-lg font-bold">Your Savings Summary</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Time Saved Card */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-4 h-4 text-blue-200" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-blue-100 opacity-80">Time Saved</span>
+                    </div>
+                    <p className="text-xl font-black leading-tight">
+                      {timeResults.yearsSaved} {timeResults.yearsSaved === 1 ? 'year' : 'years'} and {timeResults.monthsSavedPart} {timeResults.monthsSavedPart === 1 ? 'month' : 'months'}
+                    </p>
+                    <p className="text-[10px] text-blue-100 opacity-60 mt-1">
+                      Pay off in {timeResults.yearsNew} years and {timeResults.monthsNewPart} months
+                    </p>
+                  </div>
+
+                  {/* Total Interest Saved Card */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="w-4 h-4 text-blue-200" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-blue-100 opacity-80">Total Interest Saved</span>
+                    </div>
+                    <p className="text-2xl font-black leading-tight">
+                      {formatCurrency(results.totalSavings, inputs.currency, 0)}
+                    </p>
+                    <p className="text-[10px] text-blue-100 opacity-60 mt-1">
+                      Over the life of your loan
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-8 border-t border-slate-100 pt-8 mt-auto">
-                <div className="text-left space-y-1">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">New Term</p>
-                  <p className="text-2xl font-black text-indigo-900">{results.yearsToPayoff.toFixed(1)} Years</p>
-                  <p className="text-xs text-blue-500 font-medium">Reduced from {inputs.loanTerm}</p>
+              {/* Savings Breakdown Dashboard */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 px-1">
+                  <TrendingUp className="w-5 h-5 text-indigo-900" />
+                  <h3 className="text-lg font-bold text-indigo-900">Savings Breakdown</h3>
                 </div>
-                <div className="text-left space-y-1">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Time Saved</p>
-                  <p className="text-2xl font-black text-emerald-600">
-                    {Math.floor(results.monthsSaved / 12)}y {results.monthsSaved % 12}m
-                  </p>
-                  <p className="text-xs text-emerald-500 font-medium">Faster to Freedom</p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Daily Savings */}
+                  <div className="bg-blue-600 rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-32">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">Daily Savings</span>
+                      <Calendar className="w-4 h-4 opacity-50" />
+                    </div>
+                    <div className="border-b border-white/20 pb-1 mt-auto">
+                      <p className="text-2xl font-black">{formatCurrency(periodicSavings.day, inputs.currency, 2)}</p>
+                    </div>
+                  </div>
+
+                  {/* Weekly Savings */}
+                  <div className="bg-indigo-600 rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-32">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">Weekly Savings</span>
+                      <Calendar className="w-4 h-4 opacity-50" />
+                    </div>
+                    <div className="border-b border-white/20 pb-1 mt-auto">
+                      <p className="text-2xl font-black">{formatCurrency(periodicSavings.week, inputs.currency, 2)}</p>
+                    </div>
+                  </div>
+
+                  {/* Monthly Savings */}
+                  <div className="bg-blue-500 rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-32">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">Monthly Savings</span>
+                      <Calendar className="w-4 h-4 opacity-50" />
+                    </div>
+                    <div className="border-b border-white/20 pb-1 mt-auto">
+                      <p className="text-2xl font-black">{formatCurrency(periodicSavings.month, inputs.currency, 2)}</p>
+                    </div>
+                  </div>
+
+                  {/* Yearly Savings */}
+                  <div className="bg-indigo-500 rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-32">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">Yearly Savings</span>
+                      <Calendar className="w-4 h-4 opacity-50" />
+                    </div>
+                    <div className="border-b border-white/20 pb-1 mt-auto">
+                      <p className="text-2xl font-black">{formatCurrency(periodicSavings.year, inputs.currency, 2)}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-10">
+              {/* AI Insight Button */}
+              <div className="pt-2 text-center">
                 <button 
                   onClick={getAiInsight}
                   disabled={loadingAi}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 mx-auto disabled:opacity-50"
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 mx-auto transition-opacity disabled:opacity-50"
                 >
-                  {loadingAi ? "Generating..." : <><Sparkles className="w-3 h-3" /> Get Smart AI Insight</>}
+                  {loadingAi ? "Analyzing Wealth Strategy..." : <><Sparkles className="w-3 h-3" /> Get Smart AI Insight</>}
                 </button>
                 {aiInsight && (
-                  <p className="text-xs text-slate-500 italic mt-3 max-w-sm mx-auto leading-relaxed">
+                  <p className="text-xs text-slate-500 italic mt-3 max-w-md mx-auto leading-relaxed border-l-2 border-blue-200 pl-4 py-1">
                     "{aiInsight}"
                   </p>
                 )}
@@ -202,9 +323,9 @@ const App: React.FC = () => {
       {/* Footer */}
       <footer className="mt-8 text-center space-y-4">
         <div className="flex items-center justify-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          <span className="cursor-pointer hover:text-blue-500">Privacy Policy</span>
-          <span className="cursor-pointer hover:text-blue-500">Terms of Service</span>
-          <span className="cursor-pointer hover:text-blue-500">Disclaimer</span>
+          <span className="cursor-pointer hover:text-blue-500 transition-colors">Privacy Policy</span>
+          <span className="cursor-pointer hover:text-blue-500 transition-colors">Terms of Service</span>
+          <span className="cursor-pointer hover:text-blue-500 transition-colors">Disclaimer</span>
         </div>
         <p className="text-[10px] text-slate-400">
           © 2025 Mortgage Payoff Calculator. All Rights Reserved.<br/>
