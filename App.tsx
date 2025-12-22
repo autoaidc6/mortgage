@@ -1,11 +1,14 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { Calculator, Clock, DollarSign, TrendingUp, ChevronDown, Sparkles, Calendar } from 'lucide-react';
+import { Calculator, Clock, DollarSign, TrendingUp, ChevronDown, Sparkles, Calendar, ShieldCheck, X } from 'lucide-react';
 import InputGroup from './components/InputGroup';
 import PrivacyPolicy from './PrivacyPolicy';
 import TermsOfService from './TermsOfService';
 import Disclaimer from './Disclaimer';
+import AboutUs from './AboutUs';
+import ContactUs from './ContactUs';
+import AdPlaceholder from './components/AdPlaceholder';
 import { MortgageInputs, PeriodicSavings, PaymentType } from './types';
 import { calculateMortgage, formatCurrency, getCurrencySymbol } from './services/mortgageCalculator';
 
@@ -20,10 +23,11 @@ const CURRENCIES = [
   { code: 'INR', label: 'Indian Rupee (₹)' },
 ];
 
-type AppView = 'calculator' | 'privacy' | 'terms' | 'disclaimer';
+type AppView = 'calculator' | 'privacy' | 'terms' | 'disclaimer' | 'about' | 'contact';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>('calculator');
+  const [showCookieBanner, setShowCookieBanner] = useState(false);
   const [inputs, setInputs] = useState<MortgageInputs>({
     balance: 300000,
     interestRate: 6.5,
@@ -36,6 +40,18 @@ const App: React.FC = () => {
   const [hasCalculated, setHasCalculated] = useState(false);
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
+
+  useEffect(() => {
+    const consent = localStorage.getItem('cookie-consent');
+    if (!consent) {
+      setShowCookieBanner(true);
+    }
+  }, []);
+
+  const handleAcceptCookies = () => {
+    localStorage.setItem('cookie-consent', 'true');
+    setShowCookieBanner(false);
+  };
 
   const results = useMemo(() => calculateMortgage(inputs), [inputs]);
 
@@ -104,13 +120,45 @@ const App: React.FC = () => {
   if (view === 'privacy') return <PrivacyPolicy onBack={() => setView('calculator')} />;
   if (view === 'terms') return <TermsOfService onBack={() => setView('calculator')} />;
   if (view === 'disclaimer') return <Disclaimer onBack={() => setView('calculator')} />;
+  if (view === 'about') return <AboutUs onBack={() => setView('calculator')} />;
+  if (view === 'contact') return <ContactUs onBack={() => setView('calculator')} />;
 
   return (
-    <div className="min-h-screen flex flex-col items-center py-12 px-4 gap-12">
+    <div className="min-h-screen flex flex-col items-center py-12 px-4 gap-8 md:gap-12 relative">
+      {/* Cookie Banner */}
+      {showCookieBanner && (
+        <div className="fixed bottom-0 left-0 right-0 bg-indigo-900 text-white p-4 shadow-2xl z-50 animate-in slide-in-from-bottom duration-300">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="w-8 h-8 text-blue-400" />
+              <p className="text-xs md:text-sm">
+                We use cookies to improve your experience and analyze traffic. By using our site, you consent to our use of cookies and our updated <button onClick={() => setView('privacy')} className="underline text-blue-300">Privacy Policy</button>.
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={handleAcceptCookies}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold text-sm whitespace-nowrap"
+              >
+                Accept All
+              </button>
+              <button onClick={() => setShowCookieBanner(false)} className="text-white/60 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header Section */}
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold text-indigo-900 tracking-tight">Mortgage Payoff Calculator</h1>
-        <p className="text-blue-600 font-medium">Discover how much money you can save with an extra mortgage payment</p>
+        <h1 className="text-4xl font-bold text-indigo-900 tracking-tight">SmartMortgage Payoff</h1>
+        <p className="text-blue-600 font-medium">Professional interest savings visualization & debt strategy tools</p>
+      </div>
+
+      {/* TOP AD PLACEMENT: Below Header Leaderboard */}
+      <div className="w-full max-w-6xl px-4">
+        <AdPlaceholder type="leaderboard" />
       </div>
 
       {/* Main Calculator Content */}
@@ -196,6 +244,10 @@ const App: React.FC = () => {
               <p className="text-sm font-medium text-blue-500/80 px-12">
                 Enter your mortgage details to see your potential savings
               </p>
+              {/* Sidebar Ad (visible before calculation) */}
+              <div className="mt-8 w-full">
+                <AdPlaceholder type="rectangle" />
+              </div>
             </div>
           ) : (
             <div className="flex flex-col gap-6 animate-in fade-in duration-500">
@@ -236,6 +288,9 @@ const App: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* IN-STREAM AD PLACEMENT: Between Summary and Breakdown */}
+              <AdPlaceholder type="fluid" />
 
               {/* Savings Breakdown Dashboard */}
               <div className="space-y-4">
@@ -338,16 +393,23 @@ const App: React.FC = () => {
         </div>
       </div>
 
+      {/* BOTTOM AD PLACEMENT: Above Footer Leaderboard */}
+      <div className="w-full max-w-6xl px-4 -mb-4">
+        <AdPlaceholder type="leaderboard" />
+      </div>
+
       {/* Footer */}
-      <footer className="mt-8 text-center space-y-4">
-        <div className="flex items-center justify-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+      <footer className="mt-8 text-center space-y-4 pb-12">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <button onClick={() => setView('about')} className="hover:text-blue-500 transition-colors">About Us</button>
+          <button onClick={() => setView('contact')} className="hover:text-blue-500 transition-colors">Contact Us</button>
           <button onClick={() => setView('privacy')} className="hover:text-blue-500 transition-colors">Privacy Policy</button>
           <button onClick={() => setView('terms')} className="hover:text-blue-500 transition-colors">Terms of Service</button>
           <button onClick={() => setView('disclaimer')} className="hover:text-blue-500 transition-colors">Disclaimer</button>
         </div>
         <p className="text-[10px] text-slate-400">
-          © 2025 Mortgage Payoff Calculator. All Rights Reserved.<br/>
-          Contact: info@example.com
+          © 2025 SmartMortgage Payoff Calculator. All Rights Reserved.<br/>
+          SmartMortgage is an independent financial tool and is not affiliated with any banking institution.
         </p>
       </footer>
     </div>

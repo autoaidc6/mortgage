@@ -14,18 +14,25 @@ const PrivacyPolicy: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <h1 className="text-3xl font-black text-indigo-900">Privacy Policy</h1>
         </div>
         <div className="prose prose-slate max-w-none text-slate-600 space-y-4">
-          <p className="font-medium text-slate-800">Effective Date: October 2023</p>
+          <p className="font-medium text-slate-800">Effective Date: January 1, 2025</p>
           <p>Your privacy is important to us. It is SmartMortgage's policy to respect your privacy regarding any information we may collect from you across our website.</p>
           
           <h2 className="text-xl font-bold text-indigo-900 pt-4">1. Information We Collect</h2>
-          <p>We only ask for personal information when we truly need it to provide a service to you. We collect it by fair and lawful means, with your knowledge and consent.</p>
-          <p>This calculator is client-side only. We do not store your mortgage balance, interest rates, or extra payment details on our servers.</p>
+          <p>We do not collect personal identifying information. This calculator is client-side only. We do not store your mortgage balance, interest rates, or extra payment details on our servers.</p>
 
-          <h2 className="text-xl font-bold text-indigo-900 pt-4">2. Data Storage</h2>
-          <p>We only retain collected information for as long as necessary to provide you with your requested service. What data we store, we’ll protect within commercially acceptable means to prevent loss and theft, as well as unauthorized access, disclosure, copying, use, or modification.</p>
+          <h2 className="text-xl font-bold text-indigo-900 pt-4">2. Google AdSense and Cookies</h2>
+          <p>We use third-party advertising companies to serve ads when you visit our website. These companies may use information (not including your name, address, email address, or telephone number) about your visits to this and other websites in order to provide advertisements about goods and services of interest to you.</p>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to your website or other websites.</li>
+            <li>Google's use of advertising cookies enables it and its partners to serve ads to your users based on their visit to your sites and/or other sites on the Internet.</li>
+            <li>Users may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" className="text-blue-600 underline">Ads Settings</a>.</li>
+          </ul>
 
-          <h2 className="text-xl font-bold text-indigo-900 pt-4">3. Third-Party Services</h2>
-          <p>Our website may link to external sites that are not operated by us. Please be aware that we have no control over the content and practices of these sites, and cannot accept responsibility or liability for their respective privacy policies.</p>
+          <h2 className="text-xl font-bold text-indigo-900 pt-4">3. Log Files</h2>
+          <p>Like many other Web sites, SmartMortgage makes use of log files. The information inside the log files includes internet protocol ( IP ) addresses, type of browser, Internet Service Provider ( ISP ), date/time stamp, referring/exit pages, and number of clicks to analyze trends, administer the site, track user’s movement around the site, and gather demographic information.</p>
+
+          <h2 className="text-xl font-bold text-indigo-900 pt-4">4. Consent</h2>
+          <p>By using our website, you hereby consent to our privacy policy and agree to its terms.</p>
         </div>
       </div>
     </div>
