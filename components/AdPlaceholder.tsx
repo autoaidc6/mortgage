@@ -43,10 +43,10 @@ const AdPlaceholder: React.FC<AdPlaceholderProps> = ({ type, className = "", slo
         <span className="text-[8px] text-slate-400">{type.toUpperCase()}</span>
       </div>
 
-      {/* Actual AdSense Tag - Replace 'ca-pub-...' with your actual ID later */}
+      {/* Actual AdSense Tag - Using Publisher ID from ads.txt */}
       <ins className="adsbygoogle"
            style={{ display: 'block', width: '100%', height: '100%' }}
-           data-ad-client="ca-pub-0000000000000000"
+           data-ad-client="ca-pub-1582740964883479"
            data-ad-slot={slotId}
            data-ad-format={adFormats[type]}
            data-full-width-responsive="true"></ins>

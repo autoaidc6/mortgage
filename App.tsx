@@ -288,8 +288,10 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* IN-STREAM AD PLACEMENT: Between Summary and Breakdown */}
-              <AdPlaceholder type="fluid" slotId="IN_STREAM_FLUID" />
+              {/* IN-STREAM AD PLACEMENT: Between Summary and Breakdown (Half Size) */}
+              <div className="w-3/4 md:w-1/2 mx-auto">
+                <AdPlaceholder type="fluid" slotId="IN_STREAM_FLUID" className="!min-h-[60px]" />
+              </div>
 
               {/* Savings Breakdown Dashboard */}
               <div className="space-y-4">
