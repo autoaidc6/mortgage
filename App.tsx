@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { Calculator, Clock, DollarSign, TrendingUp, ChevronDown, Sparkles, Calendar, ShieldCheck, X } from 'lucide-react';
@@ -158,7 +157,7 @@ const App: React.FC = () => {
 
       {/* TOP AD PLACEMENT: Below Header Leaderboard */}
       <div className="w-full max-w-6xl px-4">
-        <AdPlaceholder type="leaderboard" />
+        <AdPlaceholder type="leaderboard" slotId="TOP_LEADERBOARD" />
       </div>
 
       {/* Main Calculator Content */}
@@ -246,7 +245,7 @@ const App: React.FC = () => {
               </p>
               {/* Sidebar Ad (visible before calculation) */}
               <div className="mt-8 w-full">
-                <AdPlaceholder type="rectangle" />
+                <AdPlaceholder type="rectangle" slotId="SIDEBAR_RECTANGLE" />
               </div>
             </div>
           ) : (
@@ -290,7 +289,7 @@ const App: React.FC = () => {
               </div>
 
               {/* IN-STREAM AD PLACEMENT: Between Summary and Breakdown */}
-              <AdPlaceholder type="fluid" />
+              <AdPlaceholder type="fluid" slotId="IN_STREAM_FLUID" />
 
               {/* Savings Breakdown Dashboard */}
               <div className="space-y-4">
@@ -366,6 +365,11 @@ const App: React.FC = () => {
         </div>
       </div>
 
+      {/* MID-PAGE AD PLACEMENT: Responsive fluid unit */}
+      <div className="w-full max-w-6xl px-4">
+        <AdPlaceholder type="fluid" slotId="MID_PAGE_FLUID" />
+      </div>
+
       {/* Feature Section: Bottom Cards */}
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl shadow-md p-8 flex flex-col items-center text-center gap-3 transition-transform hover:scale-[1.02]">
@@ -395,7 +399,7 @@ const App: React.FC = () => {
 
       {/* BOTTOM AD PLACEMENT: Above Footer Leaderboard */}
       <div className="w-full max-w-6xl px-4 -mb-4">
-        <AdPlaceholder type="leaderboard" />
+        <AdPlaceholder type="leaderboard" slotId="BOTTOM_LEADERBOARD" />
       </div>
 
       {/* Footer */}
